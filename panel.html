@@ -3,8 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTTP Request Repeater</title>
+    <title>rep+ HTTP Request Repeater</title>
     <link rel="stylesheet" href="css/panel.css" />
+    <link rel="stylesheet" href="css/split-pane.css" />
+    <link rel="stylesheet" href="css/request-list.css" />
   </head>
   <body>
     <!-- Main Container -->
@@ -12,85 +14,123 @@
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="toolbar-left">
-          <button
-            id="btn-capture"
-            class="btn btn-primary"
-            title="Start/Stop Capture"
-          >
+          <button id="btn-capture" class="btn btn-primary" title="Start/Stop Capture (Ctrl+R)">
             <span class="icon">⏺</span> Capture
           </button>
-          <button
-            id="btn-clear"
-            class="btn btn-secondary"
-            title="Clear All Requests"
-          >
+          <button id="btn-clear" class="btn btn-secondary" title="Clear All Requests (Ctrl+L)">
             <span class="icon">🗑</span> Clear
           </button>
+          <span class="toolbar-divider"></span>
+          <span id="status-indicator" class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">Ready</span>
+          </span>
         </div>
         <div class="toolbar-right">
+          <span id="request-counter" class="request-counter">0 requests</span>
           <button id="btn-settings" class="btn btn-icon" title="Settings">
             <span class="icon">⚙</span>
           </button>
-          <button id="btn-theme" class="btn btn-icon" title="Toggle Theme">
+          <button id="btn-theme" class="btn btn-icon" title="Toggle Theme (Ctrl+T)">
             <span class="icon">🌓</span>
           </button>
         </div>
       </div>
 
-      <!-- Main Content Area -->
-      <div class="main-content">
+      <!-- Split Pane Container -->
+      <div class="split-pane-container">
         <!-- Left Panel: Request List -->
-        <div class="panel panel-left">
+        <div class="split-pane left-pane" data-min-width="200">
           <div class="panel-header">
             <h3>Captured Requests</h3>
+            <span id="domain-count" class="badge">0 domains</span>
+          </div>
+
+          <div class="panel-toolbar">
             <input
               type="text"
               id="search-requests"
-              placeholder="Filter requests..."
+              placeholder="Filter by URL, method, or status..."
               class="search-input"
             />
           </div>
+
           <div class="panel-body">
             <div id="request-list" class="request-list">
-              <!-- Request items will be dynamically added here -->
-              <div class="empty-state">
-                <p>No requests captured yet.</p>
-                <p class="hint">
-                  Click "Capture" to start monitoring network traffic.
-                </p>
+              <!-- Empty state -->
+              <div class="empty-state" id="empty-state-requests">
+                <div class="empty-icon">📡</div>
+                <p class="empty-title">No requests captured yet</p>
+                <p class="empty-hint">Click "Capture" to start monitoring network traffic</p>
               </div>
+
+              <!-- Request groups will be dynamically added here -->
+              <!-- Structure:
+                <div class="domain-group">
+                  <div class="domain-header">
+                    <span class="expand-icon">▼</span>
+                    <span class="domain-name">api.example.com</span>
+                    <span class="domain-count">5</span>
+                  </div>
+                  <div class="domain-requests">
+                    <div class="request-item">...</div>
+                  </div>
+                </div>
+              -->
             </div>
           </div>
         </div>
 
+        <!-- Resizer -->
+        <div class="resizer" data-direction="horizontal"></div>
+
         <!-- Center Panel: Request Editor -->
-        <div class="panel panel-center">
+        <div class="split-pane center-pane" data-min-width="300">
           <div class="panel-header">
             <h3>Request Editor</h3>
             <div class="editor-actions">
-              <button
-                id="btn-send"
-                class="btn btn-success"
-                title="Send Request"
-              >
+              <button id="btn-send" class="btn btn-success" title="Send Request (Ctrl+Enter)">
                 <span class="icon">▶</span> Send
               </button>
               <button
                 id="btn-duplicate"
                 class="btn btn-secondary"
-                title="Duplicate Request"
+                title="Duplicate Request (Ctrl+D)"
               >
                 <span class="icon">📋</span>
               </button>
+              <button id="btn-save" class="btn btn-secondary" title="Save Request">
+                <span class="icon">💾</span>
+              </button>
             </div>
           </div>
+
           <div class="panel-body">
             <div id="request-editor" class="request-editor">
-              <!-- Tabs for different sections -->
+              <!-- Request URL Bar -->
+              <div class="request-url-bar">
+                <select id="request-method" class="method-select">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                  <option value="HEAD">HEAD</option>
+                  <option value="OPTIONS">OPTIONS</option>
+                </select>
+                <input
+                  type="text"
+                  id="request-url"
+                  class="url-input"
+                  placeholder="https://api.example.com/endpoint"
+                />
+              </div>
+
+              <!-- Tabs for different views -->
               <div class="tabs">
                 <button class="tab active" data-tab="raw">Raw</button>
                 <button class="tab" data-tab="headers">Headers</button>
-                <button class="tab" data-tab="params">Parameters</button>
+                <button class="tab" data-tab="params">Params</button>
                 <button class="tab" data-tab="body">Body</button>
               </div>
 
@@ -100,29 +140,69 @@
                   <textarea
                     id="raw-request"
                     class="code-editor"
-                    placeholder="Paste or edit raw HTTP request..."
+                    placeholder='Paste or edit raw HTTP request...&#10;&#10;POST /api/users HTTP/1.1&#10;Host: api.example.com&#10;Content-Type: application/json&#10;&#10;{&#10;  "name": "John Doe"&#10;}'
+                    spellcheck="false"
                   ></textarea>
                 </div>
+
                 <div id="tab-headers" class="tab-pane">
-                  <div id="headers-editor" class="key-value-editor"></div>
+                  <div class="key-value-container">
+                    <div id="headers-editor" class="key-value-editor">
+                      <!-- Dynamic headers will be added here -->
+                    </div>
+                    <button class="btn-add-row" id="add-header">
+                      <span class="icon">+</span> Add Header
+                    </button>
+                  </div>
                 </div>
+
                 <div id="tab-params" class="tab-pane">
-                  <div id="params-editor" class="key-value-editor"></div>
+                  <div class="key-value-container">
+                    <div id="params-editor" class="key-value-editor">
+                      <!-- Dynamic params will be added here -->
+                    </div>
+                    <button class="btn-add-row" id="add-param">
+                      <span class="icon">+</span> Add Parameter
+                    </button>
+                  </div>
                 </div>
+
                 <div id="tab-body" class="tab-pane">
-                  <textarea
-                    id="body-editor"
-                    class="code-editor"
-                    placeholder="Request body..."
-                  ></textarea>
+                  <div class="body-editor-container">
+                    <div class="body-type-selector">
+                      <label>
+                        <input type="radio" name="body-type" value="raw" checked /> Raw
+                      </label>
+                      <label> <input type="radio" name="body-type" value="json" /> JSON </label>
+                      <label>
+                        <input type="radio" name="body-type" value="form" /> Form Data
+                      </label>
+                    </div>
+                    <textarea
+                      id="body-editor"
+                      class="code-editor"
+                      placeholder="Request body..."
+                      spellcheck="false"
+                    ></textarea>
+                  </div>
                 </div>
+              </div>
+
+              <!-- Empty state -->
+              <div class="empty-state" id="empty-state-editor" style="display: none">
+                <div class="empty-icon">👆</div>
+                <p class="empty-title">No request selected</p>
+                <p class="empty-hint">Select a request from the list to edit it</p>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Resizer -->
+        <div class="resizer" data-direction="horizontal"></div>
+
         <!-- Right Panel: Response Viewer -->
-        <div class="panel panel-right">
+        <div class="split-pane right-pane" data-min-width="250">
           <div class="panel-header">
             <h3>Response</h3>
             <div class="response-meta">
@@ -131,6 +211,7 @@
               <span id="response-size" class="response-size"></span>
             </div>
           </div>
+
           <div class="panel-body">
             <div id="response-viewer" class="response-viewer">
               <!-- Tabs for response views -->
@@ -145,17 +226,23 @@
                 <div id="tab-response-raw" class="tab-pane active">
                   <pre id="response-raw" class="code-viewer"></pre>
                 </div>
+
                 <div id="tab-response-headers" class="tab-pane">
-                  <pre id="response-headers" class="code-viewer"></pre>
+                  <div class="headers-list">
+                    <div id="response-headers" class="response-headers-container"></div>
+                  </div>
                 </div>
+
                 <div id="tab-response-preview" class="tab-pane">
-                  <div id="response-preview" class="response-preview"></div>
+                  <div id="response-preview" class="response-preview-container"></div>
                 </div>
               </div>
 
-              <div class="empty-state">
-                <p>No response yet.</p>
-                <p class="hint">Send a request to see the response here.</p>
+              <!-- Empty state -->
+              <div class="empty-state" id="empty-state-response">
+                <div class="empty-icon">⏳</div>
+                <p class="empty-title">No response yet</p>
+                <p class="empty-hint">Send a request to see the response here</p>
               </div>
             </div>
           </div>
@@ -165,7 +252,7 @@
       <!-- Status Bar -->
       <div class="status-bar">
         <span id="status-text">Ready</span>
-        <span id="request-count">0 requests captured</span>
+        <span id="selected-request-info" class="selected-info"></span>
       </div>
     </div>
 

@@ -33,6 +33,7 @@ A powerful Chrome DevTools extension for capturing, modifying, and repeating HTT
 ### For Development
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd Burp-style-chrome-dev-tool
@@ -54,7 +55,7 @@ A powerful Chrome DevTools extension for capturing, modifying, and repeating HTT
 
 ### For Production
 
-*Coming soon: Chrome Web Store listing*
+_Coming soon: Chrome Web Store listing_
 
 ## 📖 Usage Guide
 
@@ -233,18 +234,21 @@ npm run build
 ## 🗺️ Roadmap
 
 ### Version 1.1
+
 - [ ] PNG icon files
 - [ ] Syntax highlighting for request/response bodies
 - [ ] Export/Import requests (HAR format)
 - [ ] Request collections and folders
 
 ### Version 1.2
+
 - [ ] Environment variables
 - [ ] Pre-request scripts
 - [ ] Post-response scripts
 - [ ] Request comparison/diff tool
 
 ### Version 2.0
+
 - [ ] Request assertions and testing
 - [ ] Mock responses
 - [ ] WebSocket support

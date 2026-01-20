@@ -14,13 +14,14 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 
-               'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 
-               sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -107,8 +108,13 @@ html, body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .btn-secondary {
@@ -261,13 +267,34 @@ html, body {
   margin-right: 8px;
 }
 
-.method-get { background-color: var(--method-get); color: white; }
-.method-post { background-color: var(--method-post); color: white; }
-.method-put { background-color: var(--method-put); color: white; }
-.method-delete { background-color: var(--method-delete); color: white; }
-.method-patch { background-color: var(--method-patch); color: white; }
-.method-options { background-color: var(--method-options); color: white; }
-.method-head { background-color: var(--method-head); color: white; }
+.method-get {
+  background-color: var(--method-get);
+  color: white;
+}
+.method-post {
+  background-color: var(--method-post);
+  color: white;
+}
+.method-put {
+  background-color: var(--method-put);
+  color: white;
+}
+.method-delete {
+  background-color: var(--method-delete);
+  color: white;
+}
+.method-patch {
+  background-color: var(--method-patch);
+  color: white;
+}
+.method-options {
+  background-color: var(--method-options);
+  color: white;
+}
+.method-head {
+  background-color: var(--method-head);
+  color: white;
+}
 
 .request-url {
   font-size: 13px;
@@ -516,12 +543,12 @@ html, body {
   .main-content {
     flex-direction: column;
   }
-  
+
   .panel {
     border-right: none;
     border-bottom: 1px solid var(--border-primary);
   }
-  
+
   .panel-left,
   .panel-center,
   .panel-right {

@@ -1,0 +1,20 @@
+<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="16" fill="url(#grad)"/>
+  
+  <!-- HTTP symbol -->
+  <text x="64" y="50" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">HTTP</text>
+  
+  <!-- Circular arrows representing repeater -->
+  <path d="M 40 80 A 24 24 0 1 1 64 104" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M 88 80 A 24 24 0 1 0 64 104" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+  
+  <!-- Arrow heads -->
+  <path d="M 38 80 L 34 76 L 38 72" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 90 80 L 94 76 L 90 72" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

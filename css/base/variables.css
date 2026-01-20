@@ -1,0 +1,153 @@
+/* CSS Variables - Theme Colors and Spacing */
+
+/* ============================================
+   DARK THEME (Default)
+   ============================================ */
+
+:root,
+:root[data-theme="dark"] {
+  /* Background Colors */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d30;
+  --bg-hover: #37373d;
+  --bg-active: #007acc;
+  
+  /* Text Colors */
+  --text-primary: #cccccc;
+  --text-secondary: #858585;
+  --text-muted: #6a6a6a;
+  --text-link: #4fc3f7;
+  --text-success: #4ec9b0;
+  --text-warning: #dcdcaa;
+  --text-error: #f48771;
+  
+  /* Border Colors */
+  --border-primary: #3e3e42;
+  --border-secondary: #2d2d30;
+  --border-focus: #007acc;
+  
+  /* Status Colors */
+  --status-1xx: #61afef;
+  --status-2xx: #98c379;
+  --status-3xx: #d19a66;
+  --status-4xx: #e5c07b;
+  --status-5xx: #e06c75;
+  
+  /* Method Colors */
+  --method-get: #61afef;
+  --method-post: #98c379;
+  --method-put: #d19a66;
+  --method-delete: #e06c75;
+  --method-patch: #c678dd;
+  --method-options: #56b6c2;
+  --method-head: #abb2bf;
+  
+  /* Button Colors */
+  --button-primary-bg: #0e639c;
+  --button-primary-hover: #1177bb;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #3a3a3c;
+  --button-secondary-hover: #4a4a4c;
+  
+  /* Editor Colors */
+  --editor-bg: #1e1e1e;
+  --editor-gutter: #252526;
+  --editor-line-number: #858585;
+  --editor-selection: #264f78;
+  --editor-cursor: #aeafad;
+  
+  /* Scrollbar */
+  --scrollbar-track: #1e1e1e;
+  --scrollbar-thumb: #424242;
+  --scrollbar-thumb-hover: #4e4e4e;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  
+  /* Border Radius */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+}
+
+/* ============================================
+   LIGHT THEME
+   ============================================ */
+
+:root[data-theme="light"] {
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f3f3;
+  --bg-tertiary: #e8e8e8;
+  --bg-hover: #e8e8e8;
+  --bg-active: #0078d4;
+  
+  /* Text Colors */
+  --text-primary: #383838;
+  --text-secondary: #717171;
+  --text-muted: #999999;
+  --text-link: #006ab1;
+  --text-success: #13a10e;
+  --text-warning: #c19c00;
+  --text-error: #d13438;
+  
+  /* Border Colors */
+  --border-primary: #d4d4d4;
+  --border-secondary: #e8e8e8;
+  --border-focus: #0078d4;
+  
+  /* Status Colors */
+  --status-1xx: #0078d4;
+  --status-2xx: #13a10e;
+  --status-3xx: #ff8c00;
+  --status-4xx: #ffb900;
+  --status-5xx: #d13438;
+  
+  /* Method Colors */
+  --method-get: #0078d4;
+  --method-post: #13a10e;
+  --method-put: #ff8c00;
+  --method-delete: #d13438;
+  --method-patch: #8764b8;
+  --method-options: #00b7c3;
+  --method-head: #717171;
+  
+  /* Button Colors */
+  --button-primary-bg: #0078d4;
+  --button-primary-hover: #106ebe;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #f3f3f3;
+  --button-secondary-hover: #e1e1e1;
+  
+  /* Editor Colors */
+  --editor-bg: #ffffff;
+  --editor-gutter: #f3f3f3;
+  --editor-line-number: #717171;
+  --editor-selection: #add6ff;
+  --editor-cursor: #000000;
+  
+  /* Scrollbar */
+  --scrollbar-track: #f3f3f3;
+  --scrollbar-thumb: #c8c8c8;
+  --scrollbar-thumb-hover: #a6a6a6;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+}

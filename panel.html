@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTTP Request Repeater</title>
+    <link rel="stylesheet" href="css/panel.css" />
+  </head>
+  <body>
+    <!-- Main Container -->
+    <div id="app" class="app-container">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button
+            id="btn-capture"
+            class="btn btn-primary"
+            title="Start/Stop Capture"
+          >
+            <span class="icon">⏺</span> Capture
+          </button>
+          <button
+            id="btn-clear"
+            class="btn btn-secondary"
+            title="Clear All Requests"
+          >
+            <span class="icon">🗑</span> Clear
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <button id="btn-settings" class="btn btn-icon" title="Settings">
+            <span class="icon">⚙</span>
+          </button>
+          <button id="btn-theme" class="btn btn-icon" title="Toggle Theme">
+            <span class="icon">🌓</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <!-- Left Panel: Request List -->
+        <div class="panel panel-left">
+          <div class="panel-header">
+            <h3>Captured Requests</h3>
+            <input
+              type="text"
+              id="search-requests"
+              placeholder="Filter requests..."
+              class="search-input"
+            />
+          </div>
+          <div class="panel-body">
+            <div id="request-list" class="request-list">
+              <!-- Request items will be dynamically added here -->
+              <div class="empty-state">
+                <p>No requests captured yet.</p>
+                <p class="hint">
+                  Click "Capture" to start monitoring network traffic.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Panel: Request Editor -->
+        <div class="panel panel-center">
+          <div class="panel-header">
+            <h3>Request Editor</h3>
+            <div class="editor-actions">
+              <button
+                id="btn-send"
+                class="btn btn-success"
+                title="Send Request"
+              >
+                <span class="icon">▶</span> Send
+              </button>
+              <button
+                id="btn-duplicate"
+                class="btn btn-secondary"
+                title="Duplicate Request"
+              >
+                <span class="icon">📋</span>
+              </button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="request-editor" class="request-editor">
+              <!-- Tabs for different sections -->
+              <div class="tabs">
+                <button class="tab active" data-tab="raw">Raw</button>
+                <button class="tab" data-tab="headers">Headers</button>
+                <button class="tab" data-tab="params">Parameters</button>
+                <button class="tab" data-tab="body">Body</button>
+              </div>
+
+              <!-- Tab content -->
+              <div class="tab-content">
+                <div id="tab-raw" class="tab-pane active">
+                  <textarea
+                    id="raw-request"
+                    class="code-editor"
+                    placeholder="Paste or edit raw HTTP request..."
+                  ></textarea>
+                </div>
+                <div id="tab-headers" class="tab-pane">
+                  <div id="headers-editor" class="key-value-editor"></div>
+                </div>
+                <div id="tab-params" class="tab-pane">
+                  <div id="params-editor" class="key-value-editor"></div>
+                </div>
+                <div id="tab-body" class="tab-pane">
+                  <textarea
+                    id="body-editor"
+                    class="code-editor"
+                    placeholder="Request body..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Response Viewer -->
+        <div class="panel panel-right">
+          <div class="panel-header">
+            <h3>Response</h3>
+            <div class="response-meta">
+              <span id="response-status" class="status-badge"></span>
+              <span id="response-time" class="response-time"></span>
+              <span id="response-size" class="response-size"></span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="response-viewer" class="response-viewer">
+              <!-- Tabs for response views -->
+              <div class="tabs">
+                <button class="tab active" data-tab="response-raw">Raw</button>
+                <button class="tab" data-tab="response-headers">Headers</button>
+                <button class="tab" data-tab="response-preview">Preview</button>
+              </div>
+
+              <!-- Response content -->
+              <div class="tab-content">
+                <div id="tab-response-raw" class="tab-pane active">
+                  <pre id="response-raw" class="code-viewer"></pre>
+                </div>
+                <div id="tab-response-headers" class="tab-pane">
+                  <pre id="response-headers" class="code-viewer"></pre>
+                </div>
+                <div id="tab-response-preview" class="tab-pane">
+                  <div id="response-preview" class="response-preview"></div>
+                </div>
+              </div>
+
+              <div class="empty-state">
+                <p>No response yet.</p>
+                <p class="hint">Send a request to see the response here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span id="status-text">Ready</span>
+        <span id="request-count">0 requests captured</span>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/panel.js" type="module"></script>
+  </body>
+</html>

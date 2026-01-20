@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "HTTP Request Repeater",
+  "version": "1.0.0",
+  "description": "Chrome DevTools extension for capturing, modifying, and repeating HTTP requests - similar to Burp Suite Repeater",
+  "author": "Your Name",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "devtools_page": "devtools.html",
+
+  "background": {
+    "service_worker": "js/background.js",
+    "type": "module"
+  },
+
+  "permissions": ["storage", "webRequest"],
+
+  "host_permissions": [
+    "<all_urls>",
+    "http://localhost/*",
+    "https://localhost/*"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+
+  "minimum_chrome_version": "88"
+}

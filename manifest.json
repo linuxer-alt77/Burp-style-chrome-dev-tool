@@ -3,7 +3,7 @@
   "name": "HTTP Request Repeater",
   "version": "1.0.0",
   "description": "Chrome DevTools extension for capturing, modifying, and repeating HTTP requests - similar to Burp Suite Repeater",
-  "author": "Your Name",
+  "author": "NJS 7",
 
   "icons": {
     "16": "icons/icon16.svg",

@@ -10,7 +10,7 @@ console.log('[Background] HTTP Request Repeater service worker loaded');
 // Store captured requests organized by domain
 const capturedRequests = new Map(); // Map<domain, Array<request>>
 let allRequests = []; // Flat array for quick access
-let isCapturing = false;
+let isCapturing = true; // Always on
 let maxStoredRequests = 1000;
 
 // Connected DevTools panels (support multiple tabs)
@@ -122,6 +122,12 @@ chrome.runtime.onConnect.addListener((port) => {
 function handleStartCapture(message, sendResponse) {
   isCapturing = true;
   console.log('[Background] Capture started');
+  
+  // Broadcast to all parts of the extension
+  chrome.runtime.sendMessage({ type: 'CAPTURE_STARTED' }).catch(() => {
+    // Ignore error if no listeners
+  });
+  
   sendResponse({ success: true, capturing: true });
 }
 
@@ -131,6 +137,12 @@ function handleStartCapture(message, sendResponse) {
 function handleStopCapture(message, sendResponse) {
   isCapturing = false;
   console.log('[Background] Capture stopped');
+  
+  // Broadcast to all parts of the extension
+  chrome.runtime.sendMessage({ type: 'CAPTURE_STOPPED' }).catch(() => {
+    // Ignore error if no listeners
+  });
+
   sendResponse({ success: true, capturing: false });
 }
 
@@ -429,6 +441,7 @@ async function handleUpdateSettings(message, sendResponse) {
  * Notify all connected panels about an event
  */
 function notifyPanels(message) {
+  // Try to use long-lived connections first
   connectedPanels.forEach((port, tabId) => {
     try {
       port.postMessage(message);
@@ -436,6 +449,11 @@ function notifyPanels(message) {
       console.error(`[Background] Error notifying panel ${tabId}:`, error);
       connectedPanels.delete(tabId);
     }
+  });
+
+  // Also broadcast via runtime for stateless panels
+  chrome.runtime.sendMessage(message).catch(() => {
+    // Ignore error if no listener
   });
 }
 

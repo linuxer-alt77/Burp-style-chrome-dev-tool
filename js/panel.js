@@ -15,7 +15,7 @@ console.log('[rep+] Panel loaded');
 // ============================================
 
 const state = {
-  capturing: false,
+  capturing: true, // Always capturing
   requests: new Map(), // Map<domain, Array<request>>
   selectedRequest: null,
   currentResponse: null,
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeUI() {
   document.documentElement.setAttribute('data-theme', state.theme);
   updateRequestCount();
-  updateStatusIndicator('Ready', false);
+  updateStatusIndicator('Listening', true);
 }
 
 async function loadSettings() {
@@ -91,16 +91,7 @@ function connectToBackground() {
       case 'REQUEST_CAPTURED':
         handleNewRequest(message.request);
         break;
-      case 'CAPTURE_STARTED':
-        state.capturing = true;
-        updateCaptureButton();
-        updateStatusIndicator('Capturing...', true);
-        break;
-      case 'CAPTURE_STOPPED':
-        state.capturing = false;
-        updateCaptureButton();
-        updateStatusIndicator('Ready', false);
-        break;
+      // Removed capture start/stop handlers from UI perspective
     }
   });
 }
@@ -120,7 +111,10 @@ function setupEventListeners() {
   });
 
   // Toolbar buttons
-  document.getElementById('btn-capture').addEventListener('click', toggleCapture);
+  // document.getElementById('btn-capture').addEventListener('click', toggleCapture); // REMOVED
+  const btnCapture = document.getElementById('btn-capture');
+  if (btnCapture) btnCapture.addEventListener('click', toggleCapture);
+  
   document.getElementById('btn-clear').addEventListener('click', clearAllRequests);
   document.getElementById('btn-theme').addEventListener('click', toggleTheme);
   document.getElementById('btn-settings').addEventListener('click', openSettings);

@@ -6,7 +6,7 @@ console.log('[DevTools] Initializing rep+ panel...');
 // Store the panel reference globally
 let repPanel = null;
 let panelWindow = null;
-let isCapturing = false;
+let isCapturing = true; // Always capture by default
 
 // Create the DevTools panel
 chrome.devtools.panels.create(
@@ -43,7 +43,7 @@ chrome.devtools.panels.create(
 
 // Network request capture implementation
 chrome.devtools.network.onRequestFinished.addListener((harEntry) => {
-  // Only capture if actively capturing
+  // Always capture using isCapturing flag (which is now true)
   if (!isCapturing) return;
 
   try {
@@ -277,6 +277,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     sendResponse({ success: true });
   }
+  // Removed capture toggle listeners as we capture permanently now
   return true;
 });
 

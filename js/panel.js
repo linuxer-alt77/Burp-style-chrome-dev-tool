@@ -4,6 +4,10 @@
  * domain-grouped request list, and request/response editing
  */
 
+import { Editor } from './components/editor.js';
+import { ReplayHandler } from './components/replay.js';
+import { FilterSystem } from './components/filters.js';
+
 console.log('[rep+] Panel loaded');
 
 // ============================================
@@ -19,6 +23,10 @@ const state = {
   expandedDomains: new Set(),
   searchTerm: '',
   isResizing: false,
+  // Components
+  editor: null,
+  replay: null,
+  filters: null,
 };
 
 // ============================================
@@ -43,14 +51,14 @@ function initializeUI() {
 
 async function loadSettings() {
   try {
-    const result = await chrome.runtime.sendMessage({ 
-      type: 'GET_SETTINGS' 
+    const result = await chrome.runtime.sendMessage({
+      type: 'GET_SETTINGS',
     });
-    
+
     if (result.success && result.settings) {
       state.theme = result.settings.theme || 'dark';
       document.documentElement.setAttribute('data-theme', state.theme);
-      
+
       if (result.settings.autoCapture) {
         startCapture();
       }
@@ -62,10 +70,10 @@ async function loadSettings() {
 
 async function loadRequests() {
   try {
-    const result = await chrome.runtime.sendMessage({ 
-      type: 'GET_REQUESTS_BY_DOMAIN' 
+    const result = await chrome.runtime.sendMessage({
+      type: 'GET_REQUESTS_BY_DOMAIN',
     });
-    
+
     if (result.success && result.requests) {
       state.requests = new Map(Object.entries(result.requests));
       renderRequestList();
@@ -102,46 +110,52 @@ function connectToBackground() {
 // ============================================
 
 function setupEventListeners() {
+  // Initialize Components
+  state.editor = new Editor();
+  state.replay = new ReplayHandler(state.editor);
+  state.filters = new FilterSystem(({ query, method }) => {
+    state.searchTerm = query.toLowerCase();
+    state.methodFilter = method.toUpperCase();
+    renderRequestList();
+  });
+
   // Toolbar buttons
   document.getElementById('btn-capture').addEventListener('click', toggleCapture);
   document.getElementById('btn-clear').addEventListener('click', clearAllRequests);
   document.getElementById('btn-theme').addEventListener('click', toggleTheme);
   document.getElementById('btn-settings').addEventListener('click', openSettings);
-  
+
   // Request editor buttons
-  document.getElementById('btn-send').addEventListener('click', sendRequest);
+  // Note: btn-send is now handled by ReplayHandler
   document.getElementById('btn-duplicate').addEventListener('click', duplicateRequest);
   document.getElementById('btn-save').addEventListener('click', saveRequest);
-  
-  // Search
-  document.getElementById('search-requests').addEventListener('input', handleSearch);
-  
-  // Tabs
-  setupTabs();
-  
+
+  // Tabs are now handled by Editor component and Replay component
+  // ... but we might keep some legacy handlers if needed for other tabs like 'Params' or 'Body' specific logic
+
   // Request editor tabs
   document.getElementById('add-header').addEventListener('click', () => addKeyValueRow('headers'));
   document.getElementById('add-param').addEventListener('click', () => addKeyValueRow('params'));
-  
+
   // Method and URL
   document.getElementById('request-method').addEventListener('change', handleMethodChange);
   document.getElementById('request-url').addEventListener('input', handleUrlChange);
-  
+
   // Keyboard shortcuts
   document.addEventListener('keydown', handleKeyboardShortcuts);
 }
 
 function setupTabs() {
   // Request editor tabs
-  document.querySelectorAll('.request-editor .tab').forEach(tab => {
+  document.querySelectorAll('.request-editor .tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       const tabName = tab.dataset.tab;
       switchTab('.request-editor', tabName);
     });
   });
-  
+
   // Response viewer tabs
-  document.querySelectorAll('.response-viewer .tab').forEach(tab => {
+  document.querySelectorAll('.response-viewer .tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       const tabName = tab.dataset.tab;
       switchTab('.response-viewer', tabName);
@@ -151,13 +165,13 @@ function setupTabs() {
 
 function switchTab(container, tabName) {
   const containerEl = document.querySelector(container);
-  
+
   // Update tab buttons
-  containerEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  containerEl.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
   containerEl.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-  
+
   // Update tab panes
-  containerEl.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  containerEl.querySelectorAll('.tab-pane').forEach((p) => p.classList.remove('active'));
   containerEl.querySelector(`#tab-${tabName}`).classList.add('active');
 }
 
@@ -167,49 +181,49 @@ function switchTab(container, tabName) {
 
 function setupResizers() {
   const resizers = document.querySelectorAll('.resizer');
-  
+
   resizers.forEach((resizer, index) => {
     let startX, startWidth, leftPane, rightPane;
-    
+
     resizer.addEventListener('mousedown', (e) => {
       e.preventDefault();
       state.isResizing = true;
       document.body.classList.add('resizing-active');
       resizer.classList.add('resizing');
-      
+
       startX = e.clientX;
-      
+
       // Get adjacent panes
       const allPanes = Array.from(document.querySelectorAll('.split-pane'));
       leftPane = allPanes[index];
       rightPane = allPanes[index + 1];
-      
+
       startWidth = leftPane.getBoundingClientRect().width;
-      
+
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     });
-    
+
     function handleMouseMove(e) {
       if (!state.isResizing) return;
-      
+
       const delta = e.clientX - startX;
       const newWidth = startWidth + delta;
-      
+
       // Get min/max constraints
       const minWidth = parseInt(leftPane.dataset.minWidth || 200);
       const maxWidth = parseInt(leftPane.dataset.maxWidth || 99999);
-      
+
       if (newWidth >= minWidth && newWidth <= maxWidth) {
         leftPane.style.width = `${newWidth}px`;
       }
     }
-    
+
     function handleMouseUp() {
       state.isResizing = false;
       document.body.classList.remove('resizing-active');
       resizer.classList.remove('resizing');
-      
+
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     }
@@ -223,49 +237,50 @@ function setupResizers() {
 function renderRequestList() {
   const requestList = document.getElementById('request-list');
   const emptyState = document.getElementById('empty-state-requests');
-  
+
   // Clear existing content
   requestList.innerHTML = '';
-  
+
   if (state.requests.size === 0) {
     requestList.appendChild(emptyState);
     return;
   }
-  
+
   // Hide empty state
   if (emptyState.parentNode === requestList) {
     emptyState.remove();
   }
-  
+
   // Group by domain
   state.requests.forEach((requests, domain) => {
     const filteredRequests = filterRequests(requests);
     if (filteredRequests.length === 0) return;
-    
+
     const domainGroup = createDomainGroup(domain, filteredRequests);
     requestList.appendChild(domainGroup);
   });
-  
+
   updateDomainCount();
 }
 
 function filterRequests(requests) {
-  if (!state.searchTerm) return requests;
-  
-  const term = state.searchTerm.toLowerCase();
-  return requests.filter(req => 
-    req.url.toLowerCase().includes(term) ||
-    req.method.toLowerCase().includes(term) ||
-    (req.response?.status && String(req.response.status).includes(term))
-  );
+  // Use filter component logic
+  const query = state.searchTerm;
+  const method = state.methodFilter;
+
+  return requests.filter((req) => {
+    // Basic legacy filter was just search term
+    // Now we use FilterSystem.matches
+    return FilterSystem.matches(req, { query, method });
+  });
 }
 
 function createDomainGroup(domain, requests) {
   const group = document.createElement('div');
   group.className = 'domain-group';
-  
+
   const isExpanded = state.expandedDomains.has(domain);
-  
+
   // Domain header
   const header = document.createElement('div');
   header.className = 'domain-header';
@@ -274,22 +289,22 @@ function createDomainGroup(domain, requests) {
     <span class="domain-name">${escapeHtml(domain)}</span>
     <span class="domain-count">${requests.length}</span>
   `;
-  
+
   header.addEventListener('click', () => toggleDomain(domain));
-  
+
   // Domain requests
   const requestsContainer = document.createElement('div');
   requestsContainer.className = 'domain-requests';
   requestsContainer.style.display = isExpanded ? 'block' : 'none';
-  
-  requests.forEach(request => {
+
+  requests.forEach((request) => {
     const requestItem = createRequestItem(request);
     requestsContainer.appendChild(requestItem);
   });
-  
+
   group.appendChild(header);
   group.appendChild(requestsContainer);
-  
+
   return group;
 }
 
@@ -297,32 +312,37 @@ function createRequestItem(request) {
   const item = document.createElement('div');
   item.className = 'request-item';
   item.dataset.requestId = request.id;
-  
+
   if (state.selectedRequest?.id === request.id) {
     item.classList.add('selected');
   }
-  
+
   const method = request.method || 'GET';
   const url = new URL(request.url);
   const path = url.pathname + url.search;
   const status = request.response?.status || '';
   const statusClass = getStatusClass(status);
-  
+
   item.innerHTML = `
     <div class="request-method ${method.toLowerCase()}">${escapeHtml(method)}</div>
     <div class="request-path" title="${escapeHtml(request.url)}">${escapeHtml(path)}</div>
     ${status ? `<div class="request-status ${statusClass}">${status}</div>` : ''}
     <div class="request-time">${formatTime(request.timestamp)}</div>
   `;
-  
+
+  // Insert badge
+  const methodEl = item.querySelector('.request-method');
+  methodEl.innerHTML = '';
+  methodEl.appendChild(FilterSystem.createMethodBadge(request.method));
+
   item.addEventListener('click', () => selectRequest(request));
-  
+
   // Context menu
   item.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     showRequestContextMenu(e, request);
   });
-  
+
   return item;
 }
 
@@ -341,25 +361,25 @@ function toggleDomain(domain) {
 
 function selectRequest(request) {
   state.selectedRequest = request;
-  
+
   // Update selection in list
-  document.querySelectorAll('.request-item').forEach(item => {
+  document.querySelectorAll('.request-item').forEach((item) => {
     item.classList.toggle('selected', item.dataset.requestId === request.id);
   });
-  
+
   // Show editor, hide empty state
   document.getElementById('empty-state-editor').style.display = 'none';
   document.getElementById('request-editor').style.display = 'block';
-  
+
   // Populate editor
   populateEditor(request);
-  
+
   // Show response if available
   if (request.response) {
     populateResponse(request.response);
     document.getElementById('empty-state-response').style.display = 'none';
   }
-  
+
   // Update status bar
   updateSelectedInfo(request);
 }
@@ -368,19 +388,26 @@ function populateEditor(request) {
   // Method and URL
   document.getElementById('request-method').value = request.method || 'GET';
   document.getElementById('request-url').value = request.url || '';
-  
-  // Raw request
-  const rawRequest = buildRawRequest(request);
-  document.getElementById('raw-request').value = rawRequest;
-  
+
+  // Raw request - Delegated to Editor Component
+  if (state.editor) {
+    state.editor.loadRequest(request);
+  } else {
+    // Fallback
+    const rawRequest = buildRawRequest(request);
+    document.getElementById('raw-request').value = rawRequest;
+  }
+
   // Headers
   populateKeyValueEditor('headers', request.headers || {});
-  
+
   // Query params
-  const url = new URL(request.url);
-  const params = Object.fromEntries(url.searchParams);
-  populateKeyValueEditor('params', params);
-  
+  try {
+    const url = new URL(request.url); // Use request.url not url
+    const params = Object.fromEntries(url.searchParams);
+    populateKeyValueEditor('params', params);
+  } catch (e) {}
+
   // Body
   document.getElementById('body-editor').value = request.body || '';
 }
@@ -388,10 +415,10 @@ function populateEditor(request) {
 function buildRawRequest(request) {
   const url = new URL(request.url);
   const path = url.pathname + url.search;
-  
+
   let raw = `${request.method} ${path} HTTP/1.1\r\n`;
   raw += `Host: ${url.host}\r\n`;
-  
+
   if (request.headers) {
     for (const [key, value] of Object.entries(request.headers)) {
       if (key.toLowerCase() !== 'host') {
@@ -399,20 +426,20 @@ function buildRawRequest(request) {
       }
     }
   }
-  
+
   raw += '\r\n';
-  
+
   if (request.body) {
     raw += request.body;
   }
-  
+
   return raw;
 }
 
 function populateKeyValueEditor(type, data) {
   const container = document.getElementById(`${type}-editor`);
   container.innerHTML = '';
-  
+
   for (const [key, value] of Object.entries(data)) {
     addKeyValueRow(type, key, value);
   }
@@ -420,7 +447,7 @@ function populateKeyValueEditor(type, data) {
 
 function addKeyValueRow(type, key = '', value = '') {
   const container = document.getElementById(`${type}-editor`);
-  
+
   const row = document.createElement('div');
   row.className = 'key-value-row';
   row.innerHTML = `
@@ -429,9 +456,9 @@ function addKeyValueRow(type, key = '', value = '') {
     <input type="text" class="row-value" placeholder="Value" value="${escapeHtml(value)}">
     <button class="btn-remove-row" title="Remove">×</button>
   `;
-  
+
   row.querySelector('.btn-remove-row').addEventListener('click', () => row.remove());
-  
+
   container.appendChild(row);
 }
 
@@ -441,11 +468,11 @@ function populateResponse(response) {
   const statusClass = getStatusClass(response.status);
   statusBadge.textContent = `${response.status} ${response.statusText || ''}`;
   statusBadge.className = `status-badge ${statusClass}`;
-  
+
   // Time and size
   document.getElementById('response-time').textContent = `${response.time || 0}ms`;
   document.getElementById('response-size').textContent = formatSize(response.size || 0);
-  
+
   // Raw response
   let rawResponse = `HTTP/1.1 ${response.status} ${response.statusText}\r\n`;
   if (response.headers) {
@@ -455,9 +482,9 @@ function populateResponse(response) {
   }
   rawResponse += '\r\n';
   rawResponse += response.body || '';
-  
+
   document.getElementById('response-raw').textContent = rawResponse;
-  
+
   // Response headers
   const headersContainer = document.getElementById('response-headers');
   headersContainer.innerHTML = '';
@@ -472,13 +499,13 @@ function populateResponse(response) {
       headersContainer.appendChild(headerRow);
     }
   }
-  
+
   // Preview
   const preview = document.getElementById('response-preview');
   preview.innerHTML = '';
-  
+
   const contentType = response.headers?.['content-type'] || '';
-  
+
   if (contentType.includes('application/json')) {
     try {
       const json = JSON.parse(response.body);
@@ -543,7 +570,7 @@ async function stopCapture() {
 
 async function clearAllRequests() {
   if (!confirm('Clear all captured requests?')) return;
-  
+
   try {
     const result = await chrome.runtime.sendMessage({ type: 'CLEAR_REQUESTS' });
     if (result.success) {
@@ -560,18 +587,18 @@ async function clearAllRequests() {
 
 async function sendRequest() {
   if (!state.selectedRequest) return;
-  
+
   const btn = document.getElementById('btn-send');
   btn.disabled = true;
   btn.innerHTML = '<span class="icon">⏳</span> Sending...';
-  
+
   try {
     // Gather current editor state
     const method = document.getElementById('request-method').value;
     const url = document.getElementById('request-url').value;
     const headers = getKeyValueData('headers');
     const body = document.getElementById('body-editor').value;
-    
+
     const result = await chrome.runtime.sendMessage({
       type: 'SEND_REQUEST',
       request: {
@@ -582,7 +609,7 @@ async function sendRequest() {
         body,
       },
     });
-    
+
     if (result.success && result.response) {
       state.currentResponse = result.response;
       populateResponse(result.response);
@@ -601,49 +628,49 @@ function getKeyValueData(type) {
   const container = document.getElementById(`${type}-editor`);
   const rows = container.querySelectorAll('.key-value-row');
   const data = {};
-  
-  rows.forEach(row => {
+
+  rows.forEach((row) => {
     const enabled = row.querySelector('.row-enabled').checked;
     const key = row.querySelector('.row-key').value.trim();
     const value = row.querySelector('.row-value').value;
-    
+
     if (enabled && key) {
       data[key] = value;
     }
   });
-  
+
   return data;
 }
 
 function duplicateRequest() {
   if (!state.selectedRequest) return;
-  
+
   const duplicate = {
     ...state.selectedRequest,
     id: generateId(),
     timestamp: Date.now(),
   };
-  
+
   // Add to list
   const domain = new URL(duplicate.url).hostname;
   if (!state.requests.has(domain)) {
     state.requests.set(domain, []);
   }
   state.requests.get(domain).push(duplicate);
-  
+
   renderRequestList();
   selectRequest(duplicate);
 }
 
 async function saveRequest() {
   if (!state.selectedRequest) return;
-  
+
   try {
     const result = await chrome.runtime.sendMessage({
       type: 'SAVE_REQUEST',
       request: state.selectedRequest,
     });
-    
+
     if (result.success) {
       alert('Request saved!');
     }
@@ -655,7 +682,7 @@ async function saveRequest() {
 function toggleTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', state.theme);
-  
+
   chrome.runtime.sendMessage({
     type: 'UPDATE_SETTINGS',
     settings: { theme: state.theme },
@@ -673,14 +700,14 @@ function openSettings() {
 
 function handleNewRequest(request) {
   const domain = new URL(request.url).hostname;
-  
+
   if (!state.requests.has(domain)) {
     state.requests.set(domain, []);
     state.expandedDomains.add(domain);
   }
-  
+
   state.requests.get(domain).unshift(request);
-  
+
   renderRequestList();
   updateRequestCount();
 }
@@ -756,7 +783,7 @@ function updateStatusIndicator(text, active) {
   const indicator = document.getElementById('status-indicator');
   const statusText = indicator.querySelector('.status-text');
   statusText.textContent = text;
-  
+
   if (active) {
     indicator.classList.add('active');
   } else {
@@ -766,15 +793,17 @@ function updateStatusIndicator(text, active) {
 
 function updateRequestCount() {
   let total = 0;
-  state.requests.forEach(requests => {
+  state.requests.forEach((requests) => {
     total += requests.length;
   });
-  
-  document.getElementById('request-counter').textContent = `${total} request${total !== 1 ? 's' : ''}`;
+
+  document.getElementById('request-counter').textContent =
+    `${total} request${total !== 1 ? 's' : ''}`;
 }
 
 function updateDomainCount() {
-  document.getElementById('domain-count').textContent = `${state.requests.size} domain${state.requests.size !== 1 ? 's' : ''}`;
+  document.getElementById('domain-count').textContent =
+    `${state.requests.size} domain${state.requests.size !== 1 ? 's' : ''}`;
 }
 
 function updateSelectedInfo(request) {

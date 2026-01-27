@@ -21,6 +21,10 @@
             <span class="icon">🗑</span> Clear
           </button>
           <span class="toolbar-divider"></span>
+          <button id="btn-layout" class="btn btn-icon" title="Toggle Layout">
+            <span class="icon">⪲</span>
+          </button>
+          <span class="toolbar-divider"></span>
           <span id="status-indicator" class="status-indicator">
             <span class="status-dot"></span>
             <span class="status-text">Ready</span>
@@ -50,9 +54,16 @@
             <input
               type="text"
               id="search-requests"
-              placeholder="Filter by URL, method, or status..."
+              placeholder="Filter by URL, method..."
               class="search-input"
             />
+            <select id="filter-method" class="filter-select">
+                <option value="">All Methods</option>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
           </div>
 
           <div class="panel-body">

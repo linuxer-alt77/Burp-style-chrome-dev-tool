@@ -5,6 +5,108 @@
 @import url('base/variables.css');
 
 /* ============================================
+   WEEK 4 FEATURES
+   ============================================ */
+
+/* Mode Tabs (Request/Response) */
+.mode-tabs {
+  display: flex;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+  padding: 2px;
+  gap: 4px;
+  margin-right: auto; /* Push actions to right */
+}
+
+.mode-tab {
+  padding: 4px 12px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.mode-tab.active {
+  background-color: var(--bg-active);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Method Badges */
+.method-badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+
+.method-get {
+  background-color: #2196f3;
+} /* Blue */
+.method-post {
+  background-color: #4caf50;
+} /* Green */
+.method-put {
+  background-color: #ff9800;
+} /* Orange */
+.method-delete {
+  background-color: #f44336;
+} /* Red */
+.method-patch {
+  background-color: #9c27b0;
+} /* Purple */
+.method-head,
+.method-options {
+  background-color: #607d8b;
+} /* Grey */
+
+/* View Container */
+.view-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Filter Select */
+.filter-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+/* Layout support */
+.split-pane-container.layout-horizontal {
+  flex-direction: column;
+}
+
+.split-pane-container.layout-horizontal .left-pane {
+  width: 100%;
+  height: 200px; /* Default height */
+  max-width: none;
+}
+
+.split-pane-container.layout-horizontal .resizer {
+  width: 100%;
+  height: 4px;
+  cursor: row-resize;
+}
+
+.split-pane-container.layout-horizontal .center-pane {
+  width: 100%;
+}
+
+/* ============================================
    GENERAL LAYOUT
    ============================================ */
 

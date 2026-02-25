@@ -37,6 +37,10 @@ export class Editor {
   }
 
   switchView(mode) {
+    if (!this.requestTab || !this.responseTab || !this.requestView || !this.responseView) {
+      return;
+    }
+
     if (mode === 'request') {
       this.requestTab.classList.add('active');
       this.responseTab.classList.remove('active');

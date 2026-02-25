@@ -101,6 +101,8 @@ function connectToBackground() {
 // ============================================
 
 function setupEventListeners() {
+  setupTabs();
+
   // Initialize Components
   state.editor = new Editor();
   state.replay = new ReplayHandler(state.editor);
@@ -114,6 +116,8 @@ function setupEventListeners() {
   // document.getElementById('btn-capture').addEventListener('click', toggleCapture); // REMOVED
   const btnCapture = document.getElementById('btn-capture');
   if (btnCapture) btnCapture.addEventListener('click', toggleCapture);
+  const btnPrettifyJson = document.getElementById('btn-prettify-json');
+  if (btnPrettifyJson) btnPrettifyJson.addEventListener('click', prettifyJsonInEditors);
   
   document.getElementById('btn-clear').addEventListener('click', clearAllRequests);
   document.getElementById('btn-theme').addEventListener('click', toggleTheme);
@@ -404,6 +408,47 @@ function populateEditor(request) {
 
   // Body
   document.getElementById('body-editor').value = request.body || '';
+}
+
+function prettifyJsonInEditors() {
+  const rawTab = document.getElementById('tab-raw');
+
+  if (rawTab?.classList.contains('active')) {
+    prettifyRawRequestJson();
+    return;
+  }
+
+  const bodyEditor = document.getElementById('body-editor');
+  if (!bodyEditor || !bodyEditor.value.trim()) return;
+
+  try {
+    bodyEditor.value = JSON.stringify(JSON.parse(bodyEditor.value), null, 2);
+  } catch (error) {
+    alert(`Body is not valid JSON: ${error.message}`);
+  }
+}
+
+function prettifyRawRequestJson() {
+  const rawEditor = document.getElementById('raw-request');
+  if (!rawEditor || !rawEditor.value.trim()) return;
+
+  const raw = rawEditor.value;
+  const boundary = raw.match(/\r?\n\r?\n/);
+  if (!boundary) return;
+
+  const separator = boundary[0];
+  const separatorIndex = raw.indexOf(separator);
+  const head = raw.slice(0, separatorIndex + separator.length);
+  const body = raw.slice(separatorIndex + separator.length).trim();
+
+  if (!body) return;
+
+  try {
+    const prettyBody = JSON.stringify(JSON.parse(body), null, 2);
+    rawEditor.value = `${head}${prettyBody}`;
+  } catch (error) {
+    alert(`Raw body is not valid JSON: ${error.message}`);
+  }
 }
 
 function buildRawRequest(request) {

@@ -111,13 +111,19 @@ export class ReplayHandler {
       const endTime = performance.now();
 
       const bodyText = await response.text();
+      const headers = {};
+      response.headers.forEach((value, key) => {
+        headers[key.toLowerCase()] = value;
+      });
+      const size = new TextEncoder().encode(bodyText).length;
 
       return {
         status: response.status,
         statusText: response.statusText,
-        headers: response.headers,
+        headers,
         body: bodyText,
         time: (endTime - startTime).toFixed(2),
+        size,
       };
     } catch (error) {
       throw error;
@@ -130,6 +136,10 @@ export class ReplayHandler {
       this.editor.switchView('response');
     }
 
+    const headers = response.headers || {};
+    const contentType = headers['content-type'] || '';
+    const formattedBody = this.formatResponseBody(response.body || '', contentType);
+
     // Populate Status
     const statusEl = document.getElementById('response-status');
     if (statusEl) {
@@ -141,15 +151,93 @@ export class ReplayHandler {
     const timeEl = document.getElementById('response-time');
     if (timeEl) timeEl.textContent = `${response.time}ms`;
 
-    // Populate Body
+    // Populate Size
+    const sizeEl = document.getElementById('response-size');
+    if (sizeEl) {
+      sizeEl.textContent = this.formatSize(response.size || 0);
+    }
+
+    // Populate Raw Response
     const rawResponseEl = document.getElementById('response-raw');
     if (rawResponseEl) {
-      rawResponseEl.textContent = response.body;
+      let raw = `HTTP/1.1 ${response.status} ${response.statusText}\n`;
+      Object.entries(headers).forEach(([key, value]) => {
+        raw += `${key}: ${value}\n`;
+      });
+      raw += `\n${formattedBody}`;
+      rawResponseEl.textContent = raw;
+    }
+
+    // Populate response headers tab
+    const headersContainer = document.getElementById('response-headers');
+    if (headersContainer) {
+      headersContainer.innerHTML = '';
+      Object.entries(headers).forEach(([key, value]) => {
+        const row = document.createElement('div');
+        row.className = 'header-row';
+
+        const keyEl = document.createElement('span');
+        keyEl.className = 'header-key';
+        keyEl.textContent = `${key}:`;
+
+        const valueEl = document.createElement('span');
+        valueEl.className = 'header-value';
+        valueEl.textContent = value;
+
+        row.appendChild(keyEl);
+        row.appendChild(valueEl);
+        headersContainer.appendChild(row);
+      });
+    }
+
+    // Populate preview tab
+    const previewEl = document.getElementById('response-preview');
+    if (previewEl) {
+      previewEl.innerHTML = '';
+
+      if (contentType.includes('application/json')) {
+        previewEl.innerHTML = `<pre>${this.escapeHtml(formattedBody)}</pre>`;
+      } else if (contentType.includes('text/html')) {
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.srcdoc = response.body || '';
+        previewEl.appendChild(iframe);
+      } else {
+        previewEl.textContent = response.body || '';
+      }
     }
 
     // Hide empty state
     const emptyState = document.getElementById('empty-state-response');
     if (emptyState) emptyState.style.display = 'none';
+  }
+
+  formatResponseBody(body, contentType) {
+    if (!body) return '';
+
+    if (contentType.includes('application/json')) {
+      try {
+        return JSON.stringify(JSON.parse(body), null, 2);
+      } catch {
+        return body;
+      }
+    }
+
+    return body;
+  }
+
+  formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   displayError(error) {

@@ -7,6 +7,7 @@
 import { Editor } from './components/editor.js';
 import { ReplayHandler } from './components/replay.js';
 import { FilterSystem } from './components/filters.js';
+import { loadHighlightJs, highlightCode } from './components/highlight.js';
 
 console.log('[rep+] Panel loaded');
 
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupResizers();
   loadRequests();
   connectToBackground();
+  loadHighlightJs();
 });
 
 function initializeUI() {
@@ -118,6 +120,75 @@ function setupEventListeners() {
   if (btnCapture) btnCapture.addEventListener('click', toggleCapture);
   const btnPrettifyJson = document.getElementById('btn-prettify-json');
   if (btnPrettifyJson) btnPrettifyJson.addEventListener('click', prettifyJsonInEditors);
+  // View toggles for response
+  const responseRawTab = document.querySelector('.response-viewer .tab[data-tab="response-raw"]');
+  const responsePreviewTab = document.querySelector('.response-viewer .tab[data-tab="response-preview"]');
+  if (responseRawTab && responsePreviewTab) {
+    responseRawTab.addEventListener('click', () => showResponseView('raw'));
+    responsePreviewTab.addEventListener('click', () => showResponseView('preview'));
+  }
+  // ============================================
+  // JSON PRETTY-PRINTER & VIEW TOGGLES
+  // ============================================
+
+  function prettifyJsonInEditors() {
+    // Try to prettify JSON in request body editor
+    const bodyEditor = document.getElementById('body-editor');
+    if (bodyEditor) {
+      try {
+        const val = bodyEditor.value.trim();
+        if (val) {
+          const pretty = JSON.stringify(JSON.parse(val), null, 2);
+          bodyEditor.value = pretty;
+        }
+      } catch (e) {
+        alert('Invalid JSON in request body!');
+      }
+    }
+    // Try to prettify JSON in response preview
+    const responseRaw = document.getElementById('response-raw');
+    if (responseRaw) {
+      try {
+        const val = responseRaw.textContent.trim();
+        if (val) {
+          const pretty = JSON.stringify(JSON.parse(val), null, 2);
+          responseRaw.textContent = pretty;
+          highlightCode(responseRaw, 'json');
+        }
+      } catch (e) {
+        // Not JSON, ignore
+      }
+    }
+  }
+
+  function showResponseView(view) {
+    const rawPane = document.getElementById('tab-response-raw');
+    const previewPane = document.getElementById('tab-response-preview');
+    if (view === 'raw') {
+      rawPane.classList.add('active');
+      previewPane.classList.remove('active');
+    } else {
+      rawPane.classList.remove('active');
+      previewPane.classList.add('active');
+      // Try to render pretty JSON in preview
+      const responseRaw = document.getElementById('response-raw');
+      const preview = document.getElementById('response-preview');
+      if (responseRaw && preview) {
+        try {
+          const val = responseRaw.textContent.trim();
+          if (val) {
+            const pretty = JSON.stringify(JSON.parse(val), null, 2);
+            preview.innerHTML = `<pre class='hljs json'>${escapeHtml(pretty)}</pre>`;
+            highlightCode(preview.querySelector('pre'), 'json');
+          } else {
+            preview.innerHTML = '<em>No response data</em>';
+          }
+        } catch (e) {
+          preview.innerHTML = '<em>Not valid JSON</em>';
+        }
+      }
+    }
+  }
   
   document.getElementById('btn-clear').addEventListener('click', clearAllRequests);
   document.getElementById('btn-theme').addEventListener('click', toggleTheme);

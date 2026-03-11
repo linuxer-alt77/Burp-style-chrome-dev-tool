@@ -8,6 +8,7 @@ import { Editor } from './components/editor.js';
 import { ReplayHandler } from './components/replay.js';
 import { FilterSystem } from './components/filters.js';
 import { loadHighlightJs, highlightCode } from './components/highlight.js';
+import * as Converters from './components/converters.js';
 
 console.log('[rep+] Panel loaded');
 
@@ -933,8 +934,61 @@ function clearEditor() {
 }
 
 function showRequestContextMenu(e, request) {
-  // TODO: Implement context menu
-  console.log('Context menu for request:', request);
+  // Remove any existing menu
+  const oldMenu = document.getElementById('request-context-menu');
+  if (oldMenu) oldMenu.remove();
+
+  // Create menu
+  const menu = document.createElement('div');
+  menu.id = 'request-context-menu';
+  menu.className = 'context-menu';
+  menu.style.position = 'fixed';
+  menu.style.top = `${e.clientY}px`;
+  menu.style.left = `${e.clientX}px`;
+  menu.style.zIndex = 9999;
+
+  // Converter options
+  const converters = [
+    { label: 'Base64 Encode', fn: () => convertText('base64Encode', request) },
+    { label: 'Base64 Decode', fn: () => convertText('base64Decode', request) },
+    { label: 'URL Encode', fn: () => convertText('urlEncode', request) },
+    { label: 'URL Decode', fn: () => convertText('urlDecode', request) },
+    { label: 'Hex Encode', fn: () => convertText('hexEncode', request) },
+    { label: 'Hex Decode', fn: () => convertText('hexDecode', request) },
+    { label: 'JWT Decode', fn: () => convertText('jwtDecode', request) },
+  ];
+  converters.forEach(({ label, fn }) => {
+    const item = document.createElement('div');
+    item.className = 'context-menu-item';
+    item.textContent = label;
+    item.addEventListener('click', () => {
+      fn();
+      menu.remove();
+    });
+    menu.appendChild(item);
+  });
+
+  document.body.appendChild(menu);
+
+  // Remove menu on click elsewhere
+  document.addEventListener('click', () => menu.remove(), { once: true });
+}
+
+function convertText(type, request) {
+  // Try to convert request body, fallback to URL
+  let input = request.body || request.url;
+  let result;
+  try {
+    if (type === 'jwtDecode') {
+      result = Converters.jwtDecode(input);
+      alert('JWT Decoded:\n' + JSON.stringify(result, null, 2));
+    } else {
+      result = Converters[type](input);
+      alert(`${type} result:\n` + result);
+    }
+  } catch (err) {
+    alert(`Conversion failed: ${err.message}`);
+  }
 }
 
 // Helper functions

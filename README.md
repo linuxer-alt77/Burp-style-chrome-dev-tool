@@ -296,3 +296,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ for web developers and security researchers**
+
+## 🔤 Text Converters & Context Menu
+
+### Supported Conversions
+- **Base64 Encode/Decode**
+- **URL Encode/Decode**
+- **Hex Encode/Decode**
+- **JWT Decode**
+
+### How to Use
+- **Right-click** any request in the request list to open the context menu.
+- Select a converter action (e.g., Base64 Encode, JWT Decode).
+- The conversion will be performed on the request body (if present), otherwise the URL.
+- Results are shown in a popup dialog.
+
+### Example
+- To decode a JWT, right-click a request, choose "JWT Decode". The decoded header, payload, and signature will be displayed.
+
+### Technical Details
+- Converter logic is implemented in `js/components/converters.js`.
+- Context menu integration is handled in `js/panel.js`.
+- Custom context menu styling is in `css/panel.css`.
+
+---
